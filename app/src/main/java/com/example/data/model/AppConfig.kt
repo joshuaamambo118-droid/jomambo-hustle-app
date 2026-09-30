@@ -1,7 +1,7 @@
 package com.example.data.model
 
 data class AppConfig(
-    val latestVersion: String = "1.0.0",
+    val latestVersion: String = "1.0.1",
     val forceUpdate: Boolean = false,
     val maintenance: Boolean = false,
     val minWithdraw: Long = 1000L, // 1000 coins (100 Naira)

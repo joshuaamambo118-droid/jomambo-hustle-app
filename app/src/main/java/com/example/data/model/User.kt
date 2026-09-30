@@ -8,7 +8,7 @@ data class User(
     val naira: Double = 0.0,
     val verified: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
-    val appVersion: String = "1.0.0",
+    val appVersion: String = "1.0.1",
     val referralCode: String = generateReferralCode(),
     val referredBy: String? = null,
     val isVip: Boolean = false,

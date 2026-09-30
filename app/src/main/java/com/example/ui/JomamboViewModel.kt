@@ -402,9 +402,17 @@ class JomamboViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                repository.unlockBonusVideos()
-                _showVipModal.value = false
-                _successMessage.value = "50 extra video slots unlocked! (₦500 Paystack payment successful)"
+                val emailOrPhone = currentUser.value?.emailOrPhone ?: "user@jomambo.app"
+                val result = com.example.data.service.PaymentService.processLivePayment(
+                    emailOrPhone = emailOrPhone,
+                    amountNaira = 500L,
+                    purpose = "Unlock 50 Video Slots"
+                )
+                if (result.success) {
+                    repository.unlockBonusVideos()
+                    _showVipModal.value = false
+                    _successMessage.value = "50 extra video slots unlocked! (₦500 Paystack Live ref: ${result.reference})"
+                }
             } catch (e: Exception) {
                 _errorMessage.value = "Payment failed: ${e.message}"
             } finally {
@@ -417,9 +425,17 @@ class JomamboViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                repository.upgradeToVip()
-                _showVipModal.value = false
-                _successMessage.value = "VIP Activated! Enjoy 2x earnings on all videos & tasks 🌟"
+                val emailOrPhone = currentUser.value?.emailOrPhone ?: "user@jomambo.app"
+                val result = com.example.data.service.PaymentService.processLivePayment(
+                    emailOrPhone = emailOrPhone,
+                    amountNaira = 1000L,
+                    purpose = "Monthly VIP Subscription"
+                )
+                if (result.success) {
+                    repository.upgradeToVip()
+                    _showVipModal.value = false
+                    _successMessage.value = "VIP Activated via Paystack Live! (Ref: ${result.reference}) Enjoy 2x earnings 🌟"
+                }
             } catch (e: Exception) {
                 _errorMessage.value = "Payment failed: ${e.message}"
             } finally {

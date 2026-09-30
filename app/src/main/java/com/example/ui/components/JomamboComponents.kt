@@ -425,7 +425,14 @@ fun InterstitialAdDialog(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Sponsored AdMob Ad", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Column {
+                    Text("Sponsored AdMob Ad", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        "Unit: ${com.example.data.service.AdService.interstitialAdUnitId}",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         },
         text = {
