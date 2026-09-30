@@ -1,0 +1,6 @@
+{
+  "name": "JOMAMBO",
+  "description": "Watch, Task & Earn rewards with JOMAMBO. Enjoy video feeds, daily spins, social tasks, offerwalls, and fast withdrawals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
