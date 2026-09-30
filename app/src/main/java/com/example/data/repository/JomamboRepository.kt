@@ -156,6 +156,38 @@ class JomamboRepository(private val database: AppDatabase) {
             )
         )
         dao.insertTasks(initialTasks.map { SocialTaskEntity.fromModel(it) })
+
+        if (dao.getCurrentUser() == null) {
+            val defaultUser = User(
+                uid = "jm_primary_user",
+                fullName = "Joshua Amambo",
+                emailOrPhone = "joshuaamambo118@gmail.com",
+                coins = 1500L,
+                naira = 150.0,
+                verified = true,
+                createdAt = System.currentTimeMillis(),
+                appVersion = "1.0.1",
+                referralCode = "JOM101",
+                isVip = true,
+                dailySpinsLeft = 5,
+                dailyVideosWatched = 3,
+                unlockedBonusVideos = 50
+            )
+            dao.insertUser(UserEntity.fromUser(defaultUser))
+            dao.insertTransaction(
+                TransactionEntity(
+                    id = "tx_welcome_1",
+                    userId = defaultUser.uid,
+                    type = "welcome_bonus",
+                    amount = 1000L,
+                    nairaAmount = 100.0,
+                    method = "Bonus",
+                    status = "success",
+                    timestamp = System.currentTimeMillis(),
+                    description = "Welcome bonus & VIP signup boost"
+                )
+            )
+        }
     }
 
     // Auth

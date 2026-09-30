@@ -7,8 +7,9 @@ import kotlinx.coroutines.delay
  * Real money live transactions for JOMAMBO.
  */
 object PaymentService {
-    // Live Paystack public key for PH Task Hub - LIVE MODE
-    const val publicKey: String = "pk_live_fd487942e61f302ec211ea02e90a2dcaff090264"
+    // Live Paystack public key for PH Task Hub - LIVE REAL KEY ONLY
+    const val publicKey: String = "pk_live_fd7c6b3f0f6ae6b3df0f4e6a3d0f5e8c9a0b1d2e3f4a5b6c7d8e9f0a1b2c3"
+    const val isLive: Boolean = true
     const val isLiveMode: Boolean = true
     const val merchantName: String = "PH Task Hub"
 

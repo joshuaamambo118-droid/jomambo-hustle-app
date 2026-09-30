@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.NoActionBar" />
+    <color name="jomambo_window_bg">#180828</color>
+    <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/jomambo_window_bg</item>
+        <item name="android:statusBarColor">@color/jomambo_window_bg</item>
+        <item name="android:navigationBarColor">@color/jomambo_window_bg</item>
+    </style>
 </resources>

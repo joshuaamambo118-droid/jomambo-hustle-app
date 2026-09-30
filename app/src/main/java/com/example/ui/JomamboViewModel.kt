@@ -127,7 +127,7 @@ class JomamboViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 repository.initSeedDataIfEmpty()
-                delay(1200) // Splash delay
+                delay(600) // Smooth splash transition
                 val user = database.jomamboDao().getCurrentUser()
                 if (user != null) {
                     _currentScreen.value = AppScreen.Main
