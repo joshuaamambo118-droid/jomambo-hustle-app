@@ -6,10 +6,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -20,17 +20,13 @@ jobs:
 
       - name: Fix Package and Constants
         run: |
-          # 1. Move com.example to com.jomambo.app if e still dey
           if [ -d "app/src/main/java/com/example" ]; then
             mkdir -p app/src/main/java/com/jomambo/app
             cp -r app/src/main/java/com/example/* app/src/main/java/com/jomambo/app/ 2>/dev/null || true
             rm -rf app/src/main/java/com/example
           fi
-          # Fix package names
           find app/src/main/java -name "*.kt" -exec sed -i 's/package com.example/package com.jomambo.app/g' {} \;
           find app/src/main/java -name "*.kt" -exec sed -i 's/import com.example/import com.jomambo.app/g' {} \;
-          
-          # 2. Permanent fix for SPIN_REWARD - define inside MainActivity only if missing
           if ! grep -q "const val SPIN_REWARD" app/src/main/java/com/jomambo/app/MainActivity.kt; then
             sed -i '1i private const val SPIN_REWARD = "spin_reward"' app/src/main/java/com/jomambo/app/MainActivity.kt
           fi
