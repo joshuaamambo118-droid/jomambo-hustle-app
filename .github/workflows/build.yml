@@ -15,8 +15,14 @@ jobs:
           cache: gradle
       - name: Grant permission
         run: chmod +x gradlew
+      - name: Fix KSP Bug
+        run: |
+          echo "org.gradle.configuration-cache=false" >> gradle.properties
+          echo "org.gradle.unsafe.configuration-cache=false" >> gradle.properties
+          echo "ksp.incremental=false" >> gradle.properties
+          echo "ksp.useKSP2=false" >> gradle.properties
       - name: Build APK
-        run: ./gradlew --no-configuration-cache clean assembleDebug
+        run: ./gradlew --no-daemon --no-configuration-cache clean assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
