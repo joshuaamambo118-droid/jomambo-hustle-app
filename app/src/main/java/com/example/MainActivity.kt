@@ -4,182 +4,162 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.viewinterop.AndroidView
+import com.google.android.gms.ads.*
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd
+import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : ComponentActivity() {
-    private lateinit var auth: FirebaseAuth
+
+    private var mInterstitial: InterstitialAd? = null
+    private var mRewarded: RewardedAd? = null
+    private var mRewardedInterstitial: RewardedInterstitialAd? = null
+    private val auth by lazy { FirebaseAuth.getInstance() }
+    private val db by lazy { FirebaseFirestore.getInstance() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        auth = Firebase.auth
+        MobileAds.initialize(this)
+        loadAllAds()
+
         setContent {
-            MaterialTheme {
-                JomamboApp(auth)
+            var coins by remember { mutableStateOf(0) }
+            var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
+
+            // Load native ad once
+            LaunchedEffect(Unit) {
+                val adLoader = AdLoader.Builder(this@MainActivity, Constants.NATIVE_ID)
+                    .forNativeAd { ad -> nativeAd = ad }
+                    .withAdListener(object : AdListener(){})
+                    .withNativeAdOptions(NativeAdOptions.Builder().build())
+                    .build()
+                adLoader.loadAd(AdRequest.Builder().build())
             }
-        }
-    }
-}
 
-@Composable
-fun JomamboApp(auth: FirebaseAuth) {
-    val navController = rememberNavController()
-    val startDestination = if (auth.currentUser != null) "home" else "login"
-    
-    NavHost(navController = navController, startDestination = startDestination) {
-        composable("login") { LoginScreen(auth, navController) }
-        composable("signup") { SignupScreen(auth, navController) }
-        composable("home") { HomeScreen(auth, navController) }
-    }
-}
-
-@Composable
-fun LoginScreen(auth: FirebaseAuth, navController: androidx.navigation.NavController) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf(false) }
-
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("JOMAMBO HUSTLE", style = MaterialTheme.typography.headlineLarge, color = Color(0xFF008000))
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Welcome Back", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email))
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
-        
-        if (error.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(error, color = Color.Red)
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = {
-            if(email.isBlank() || password.isBlank()) { error = "Fill all fields"; return@Button }
-            loading = true
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    loading = false
-                    if (task.isSuccessful) {
-                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
-                    } else {
-                        error = task.exception?.message ?: "Login failed"
-                    }
-                }
-        }, modifier = Modifier.fillMaxWidth().height(50.dp), enabled = !loading) {
-            Text(if(loading) "Logging in..." else "LOGIN")
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        TextButton(onClick = { navController.navigate("signup") }) {
-            Text("Don't have account? Create Account")
-        }
-    }
-}
-
-@Composable
-fun SignupScreen(auth: FirebaseAuth, navController: androidx.navigation.NavController) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf(false) }
-
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Create JOMAMBO Account", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Full Name") }, modifier = Modifier.fillMaxWidth())
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email))
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password (min 6 chars)") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
-        
-        if (error.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(error, color = Color.Red)
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = {
-            if(email.isBlank() || password.isBlank() || name.isBlank()) { error = "Fill all fields"; return@Button }
-            loading = true
-            auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val userId = auth.currentUser?.uid ?: ""
-                        val userMap = hashMapOf("name" to name, "email" to email, "balance" to 0, "createdAt" to System.currentTimeMillis())
-                        Firebase.firestore.collection("users").document(userId).set(userMap)
-                            .addOnSuccessListener {
-                                loading = false
-                                navController.navigate("home") { popUpTo("signup") { inclusive = true } }
+            Scaffold(
+                bottomBar = {
+                    AndroidView(
+                        modifier = Modifier.fillMaxWidth().height(60.dp),
+                        factory = { ctx ->
+                            AdView(ctx).apply {
+                                setAdSize(AdSize.BANNER)
+                                adUnitId = Constants.BANNER_ID // 7663771475 - REAL
+                                loadAd(AdRequest.Builder().build())
                             }
-                    } else {
-                        loading = false
-                        error = task.exception?.message ?: "Signup failed"
+                        }
+                    )
+                }
+            ) { padding ->
+                Column(Modifier.padding(padding).padding(16.dp)) {
+                    Text("JOMAMBO - Balance: ₦$coins", style = MaterialTheme.typography.headlineMedium)
+                    Spacer(Modifier.height(16.dp))
+
+                    // TASK BUTTON - INTERSTITIAL - NO REWARD HERE (PROFIT SAFE)
+                    Button(onClick = {
+                        if (mInterstitial != null) {
+                            mInterstitial?.fullScreenContentCallback = object: FullScreenContentCallback(){
+                                override fun onAdDismissedFullScreenContent() {
+                                    loadInterstitial()
+                                }
+                            }
+                            mInterstitial?.show(this@MainActivity)
+                        }
+                        // Task completion logic here, but NO COIN for interstitial
+                    }, modifier = Modifier.fillMaxWidth()) { 
+                        Text("View Task (Interstitial Ad)") 
+                    }
+
+                    Spacer(Modifier.height(10.dp))
+
+                    // SPIN & WIN - REWARDED - COIN ONLY AFTER VIDEO COMPLETE
+                    Button(onClick = {
+                        mRewarded?.let { ad ->
+                            ad.fullScreenContentCallback = object: FullScreenContentCallback(){
+                                override fun onAdDismissedFullScreenContent() { loadRewarded() }
+                            }
+                            ad.show(this@MainActivity) { rewardItem ->
+                                // *** MONEY GIVE ONLY HERE - AFTER USER WATCH FINISH - NO LOSS ***
+                                coins += Constants.SPIN_REWARD
+                                saveToFirebase(Constants.SPIN_REWARD)
+                            }
+                        }
+                    }, modifier = Modifier.fillMaxWidth()) { 
+                        Text("Spin & Win +${Constants.SPIN_REWARD} (Rewarded)") 
+                    }
+
+                    Spacer(Modifier.height(10.dp))
+
+                    // BONUS - REWARDED INTERSTITIAL - ALSO SAFE
+                    Button(onClick = {
+                        mRewardedInterstitial?.let { ad ->
+                            ad.fullScreenContentCallback = object: FullScreenContentCallback(){
+                                override fun onAdDismissedFullScreenContent() { loadRewardedInterstitial() }
+                            }
+                            ad.show(this@MainActivity) { rewardItem ->
+                                coins += 30
+                                saveToFirebase(30)
+                            }
+                        }
+                    }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Bonus Video +30 (Rewarded Interstitial)")
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    // REAL NATIVE AD DISPLAY - 9212567574
+                    nativeAd?.let {
+                        Text("Sponsored:")
+                        AndroidView(
+                            modifier = Modifier.fillMaxWidth().height(120.dp),
+                            factory = { ctx ->
+                                com.google.android.gms.ads.nativead.NativeAdView(ctx).apply {
+                                    // Add native ad layout here
+                                }
+                            }
+                        )
                     }
                 }
-        }, modifier = Modifier.fillMaxWidth().height(50.dp), enabled = !loading) {
-            Text(if(loading) "Creating..." else "CREATE ACCOUNT")
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        TextButton(onClick = { navController.popBackStack() }) {
-            Text("Already have account? Login")
-        }
-    }
-}
-
-@Composable
-fun HomeScreen(auth: FirebaseAuth, navController: androidx.navigation.NavController) {
-    val user = auth.currentUser
-    var balance by remember { mutableStateOf("0.00") }
-    
-    LaunchedEffect(Unit) {
-        user?.uid?.let { uid ->
-            Firebase.firestore.collection("users").document(uid).get()
-                .addOnSuccessListener { doc ->
-                    val bal = doc.getLong("balance") ?: 0L
-                    balance = bal.toString()
-                }
-        }
-    }
-
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("JOMAMBO", style = MaterialTheme.typography.headlineLarge, color = Color(0xFF008000))
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Welcome!", style = MaterialTheme.typography.titleLarge)
-        Text(user?.email ?: "", style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF008000))) {
-            Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Your Balance", color = Color.White)
-                Text("₦ $balance", style = MaterialTheme.typography.headlineLarge, color = Color.White)
             }
         }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = {
-            auth.signOut()
-            navController.navigate("login") { popUpTo("home") { inclusive = true } }
-        }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
-            Text("LOGOUT")
-        }
+    }
+
+    fun saveToFirebase(amount: Int) {
+        val uid = auth.currentUser?.uid ?: return
+        db.collection("users").document(uid)
+            .update("wallet", FieldValue.increment(amount.toLong()))
+    }
+
+    fun loadAllAds() { loadInterstitial(); loadRewarded(); loadRewardedInterstitial() }
+
+    fun loadInterstitial() {
+        InterstitialAd.load(this, Constants.INTERSTITIAL_ID, AdRequest.Builder().build(),
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(ad: InterstitialAd) { mInterstitial = ad }
+            })
+    }
+    fun loadRewarded() {
+        RewardedAd.load(this, Constants.REWARDED_ID, AdRequest.Builder().build(),
+            object : RewardedAdLoadCallback() {
+                override fun onAdLoaded(ad: RewardedAd) { mRewarded = ad }
+            })
+    }
+    fun loadRewardedInterstitial() {
+        RewardedInterstitialAd.load(this, Constants.REWARDED_INTERSTITIAL_ID, AdRequest.Builder().build(),
+            object : RewardedInterstitialAdLoadCallback() {
+                override fun onAdLoaded(ad: RewardedInterstitialAd) { mRewardedInterstitial = ad }
+            })
     }
 }
