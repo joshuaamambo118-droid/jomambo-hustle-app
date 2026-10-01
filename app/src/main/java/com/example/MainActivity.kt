@@ -1,4 +1,4 @@
-package com.example
+package com.jomambo.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -39,9 +39,8 @@ class MainActivity : ComponentActivity() {
             var coins by remember { mutableStateOf(0) }
             var nativeAd by remember { mutableStateOf<NativeAd?>(null) }
 
-            // Load native ad once
             LaunchedEffect(Unit) {
-                val adLoader = AdLoader.Builder(this@MainActivity, Constants.NATIVE_ID)
+                val adLoader = AdLoader.Builder(this@MainActivity, AdConstants.NATIVE_ID)
                     .forNativeAd { ad -> nativeAd = ad }
                     .withAdListener(object : AdListener(){})
                     .withNativeAdOptions(NativeAdOptions.Builder().build())
@@ -56,7 +55,7 @@ class MainActivity : ComponentActivity() {
                         factory = { ctx ->
                             AdView(ctx).apply {
                                 setAdSize(AdSize.BANNER)
-                                adUnitId = Constants.BANNER_ID // 7663771475 - REAL
+                                adUnitId = AdConstants.BANNER_ID
                                 loadAd(AdRequest.Builder().build())
                             }
                         }
@@ -67,7 +66,6 @@ class MainActivity : ComponentActivity() {
                     Text("JOMAMBO - Balance: ₦$coins", style = MaterialTheme.typography.headlineMedium)
                     Spacer(Modifier.height(16.dp))
 
-                    // TASK BUTTON - INTERSTITIAL - NO REWARD HERE (PROFIT SAFE)
                     Button(onClick = {
                         if (mInterstitial != null) {
                             mInterstitial?.fullScreenContentCallback = object: FullScreenContentCallback(){
@@ -77,32 +75,28 @@ class MainActivity : ComponentActivity() {
                             }
                             mInterstitial?.show(this@MainActivity)
                         }
-                        // Task completion logic here, but NO COIN for interstitial
                     }, modifier = Modifier.fillMaxWidth()) { 
                         Text("View Task (Interstitial Ad)") 
                     }
 
                     Spacer(Modifier.height(10.dp))
 
-                    // SPIN & WIN - REWARDED - COIN ONLY AFTER VIDEO COMPLETE
                     Button(onClick = {
                         mRewarded?.let { ad ->
                             ad.fullScreenContentCallback = object: FullScreenContentCallback(){
                                 override fun onAdDismissedFullScreenContent() { loadRewarded() }
                             }
                             ad.show(this@MainActivity) { rewardItem ->
-                                // *** MONEY GIVE ONLY HERE - AFTER USER WATCH FINISH - NO LOSS ***
-                                coins += Constants.SPIN_REWARD
-                                saveToFirebase(Constants.SPIN_REWARD)
+                                coins += 10
+                                saveToFirebase(10)
                             }
                         }
                     }, modifier = Modifier.fillMaxWidth()) { 
-                        Text("Spin & Win +${Constants.SPIN_REWARD} (Rewarded)") 
+                        Text("Spin & Win +10 (Rewarded)") 
                     }
 
                     Spacer(Modifier.height(10.dp))
 
-                    // BONUS - REWARDED INTERSTITIAL - ALSO SAFE
                     Button(onClick = {
                         mRewardedInterstitial?.let { ad ->
                             ad.fullScreenContentCallback = object: FullScreenContentCallback(){
@@ -119,15 +113,12 @@ class MainActivity : ComponentActivity() {
 
                     Spacer(Modifier.height(20.dp))
 
-                    // REAL NATIVE AD DISPLAY - 9212567574
                     nativeAd?.let {
                         Text("Sponsored:")
                         AndroidView(
                             modifier = Modifier.fillMaxWidth().height(120.dp),
                             factory = { ctx ->
-                                com.google.android.gms.ads.nativead.NativeAdView(ctx).apply {
-                                    // Add native ad layout here
-                                }
+                                com.google.android.gms.ads.nativead.NativeAdView(ctx)
                             }
                         )
                     }
@@ -145,19 +136,19 @@ class MainActivity : ComponentActivity() {
     fun loadAllAds() { loadInterstitial(); loadRewarded(); loadRewardedInterstitial() }
 
     fun loadInterstitial() {
-        InterstitialAd.load(this, Constants.INTERSTITIAL_ID, AdRequest.Builder().build(),
+        InterstitialAd.load(this, AdConstants.INTERSTITIAL_ID, AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) { mInterstitial = ad }
             })
     }
     fun loadRewarded() {
-        RewardedAd.load(this, Constants.REWARDED_ID, AdRequest.Builder().build(),
+        RewardedAd.load(this, AdConstants.REWARDED_ID, AdRequest.Builder().build(),
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) { mRewarded = ad }
             })
     }
     fun loadRewardedInterstitial() {
-        RewardedInterstitialAd.load(this, Constants.REWARDED_INTERSTITIAL_ID, AdRequest.Builder().build(),
+        RewardedInterstitialAd.load(this, AdConstants.REWARDED_INTERSTITIAL_ID, AdRequest.Builder().build(),
             object : RewardedInterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedInterstitialAd) { mRewardedInterstitial = ad }
             })
