@@ -15,11 +15,12 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Grant permission
+      - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Fix Package and Constants
+      - name: Fix Package & SPIN_REWARD
         run: |
+          # Move com.example to com.jomambo.app if still dey
           if [ -d "app/src/main/java/com/example" ]; then
             mkdir -p app/src/main/java/com/jomambo/app
             cp -r app/src/main/java/com/example/* app/src/main/java/com/jomambo/app/ 2>/dev/null || true
@@ -27,19 +28,13 @@ jobs:
           fi
           find app/src/main/java -name "*.kt" -exec sed -i 's/package com.example/package com.jomambo.app/g' {} \;
           find app/src/main/java -name "*.kt" -exec sed -i 's/import com.example/import com.jomambo.app/g' {} \;
+          # Permanent fix for SPIN_REWARD - add only once
           if ! grep -q "const val SPIN_REWARD" app/src/main/java/com/jomambo/app/MainActivity.kt; then
             sed -i '1i private const val SPIN_REWARD = "spin_reward"' app/src/main/java/com/jomambo/app/MainActivity.kt
           fi
 
-      - name: Fix KSP for Gradle 9.3
-        run: |
-          echo "org.gradle.configuration-cache=false" >> gradle.properties
-          echo "ksp.incremental=false" >> gradle.properties
-          sed -i '/ksp.useKSP2/d' gradle.properties || true
-          echo "ksp.useKSP2=true" >> gradle.properties
-
       - name: Build APK
-        run: ./gradlew --no-daemon --no-configuration-cache clean assembleDebug --stacktrace
+        run: ./gradlew --no-daemon clean assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
