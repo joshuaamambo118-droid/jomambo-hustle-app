@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "com.jomambo.app"
   compileSdk = 36
 
   defaultConfig {
-    applicationId = "com.jomambo.hustle"
+    applicationId = "com.jomambo.app"
     minSdk = 24
     targetSdk = 34
     versionCode = 3
