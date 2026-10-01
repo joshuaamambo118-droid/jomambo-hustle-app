@@ -18,9 +18,9 @@ jobs:
       - name: Fix KSP Bug
         run: |
           echo "org.gradle.configuration-cache=false" >> gradle.properties
-          echo "org.gradle.unsafe.configuration-cache=false" >> gradle.properties
           echo "ksp.incremental=false" >> gradle.properties
-          echo "ksp.useKSP2=false" >> gradle.properties
+          sed -i '/ksp.useKSP2/d' gradle.properties
+          echo "ksp.useKSP2=true" >> gradle.properties
       - name: Build APK
         run: ./gradlew --no-daemon --no-configuration-cache clean assembleDebug --stacktrace
       - name: Upload APK
