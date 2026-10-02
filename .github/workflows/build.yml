@@ -1,39 +1,24 @@
 name: Build Jomambo APK
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
+on: push
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Create secrets.properties from GitHub Secrets
+      
+      - name: Create secrets.properties
         run: |
-          echo "ADMOB_APP_ID=${{ secrets.ADMOB_APP_ID }}" > app/secrets.properties
+          echo "ADMOB_APP_ID=${{ secrets.ADMOB_APP_ID }}" >> app/secrets.properties
           echo "BANNER_ID=${{ secrets.BANNER_ID }}" >> app/secrets.properties
           echo "INTERSTITIAL_ID=${{ secrets.INTERSTITIAL_ID }}" >> app/secrets.properties
           echo "NATIVE_ID=${{ secrets.NATIVE_ID }}" >> app/secrets.properties
           echo "REWARDED_ID=${{ secrets.REWARDED_ID }}" >> app/secrets.properties
           echo "REWARDED_INTERSTITIAL_ID=${{ secrets.REWARDED_INTERSTITIAL_ID }}" >> app/secrets.properties
           echo "PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}" >> app/secrets.properties
-          cat app/secrets.properties
 
       - name: Build APK
-        run: chmod +x gradlew && ./gradlew assembleDebug --stacktrace
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: jomambo-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+        run: ./gradlew assembleDebug
