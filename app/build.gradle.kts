@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -32,9 +34,9 @@ android {
         jvmToolchain(17)
     }
 
-    // ===== SECRETS LOADER — THIS GO FIX YOUR BUILD =====
+    // ===== SECRETS LOADER =====
     val secretsFile = rootProject.file("app/secrets.properties")
-    val secrets = java.util.Properties()
+    val secrets = Properties()
     if (secretsFile.exists()) {
         secrets.load(secretsFile.inputStream())
     }
